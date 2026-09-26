@@ -1,0 +1,6 @@
+BASE_URL = "http://localhost:8080"
+EMAIL = "example@gmail.com"
+PASSWORD = "1231231234"
+USERNAME = "example"
+GROUP_ID = "gr-groupid"
+NEW_PASSWORD = "12312312345"
