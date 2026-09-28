@@ -43,7 +43,7 @@ pip install -r requirements.txt
 或直接安裝套件
 
 ```ini
-pip install aiohttp
+pip install aiohttp websockets
 ```
 
 ### 如何使用

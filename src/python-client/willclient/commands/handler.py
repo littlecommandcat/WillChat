@@ -1,6 +1,6 @@
 import inspect
 
-from ..objects import Message, Group, _Missing
+from ..objects import Message, Group, _Missing, MISSING
 from .core import Command
 from .data import CommandData
 
@@ -10,12 +10,7 @@ class CommandHandler:
         self._commands: dict[str, Command] = {}
         self._command_prefix: str | _Missing = command_prefix
 
-    def add_command(self, command: Command):
-        if command.name in self._commands:
-            raise ValueError(
-                f"Command {command.name!r} is already registered."
-            )
-
+    def __validate_command(self, command: Command) -> None:
         parameters = list(command.parameters.values())
 
         if not parameters:
@@ -24,18 +19,44 @@ class CommandHandler:
                 f"CommandData as its first parameter."
             )
 
-        command_data_parameter = parameters[0]
-
-        if command_data_parameter.annotation is not CommandData:
+        if parameters[0].annotation is not CommandData:
             raise TypeError(
                 f"Command {command.name!r} must have "
                 f"CommandData as its first parameter."
             )
 
-        self._commands[command.name] = command
-        print(f"Added {command.name}")
+        keyword_only = [
+            p
+            for p in parameters[1:]
+            if p.kind == inspect.Parameter.KEYWORD_ONLY
+        ]
 
-    async def _process_command(self, message: Message, group: Group):
+        if len(keyword_only) > 1:
+            raise TypeError(
+                f"Command {command.name!r} can only have "
+                f"one keyword-only parameter."
+            )
+            
+    def _remove_command(self, command: Command) -> Command:
+        if command.name not in self._commands:
+            raise ValueError(
+                f"Command {command.name!r} is not registered."
+            )
+
+        return self._commands.pop(command.name)
+
+    def _add_command(self, command: Command) -> Command:
+        if command.name in self._commands:
+            raise ValueError(
+                f"Command {command.name!r} is already registered."
+            )
+
+        self.__validate_command(command)
+
+        self._commands[command.name] = command
+        return command
+
+    async def _process_command(self, message: Message, group: Group) -> None:
         content = message.content.strip()
 
         if self._command_prefix:
@@ -52,26 +73,22 @@ class CommandHandler:
         command_name = parts[0]
         args = parts[1:]
 
-        cmd = self._commands.get(command_name)
+        command = self._commands.get(command_name)
 
-        if cmd is None:
+        if command is None:
             return
 
-        parameters = list(cmd.parameters.values())
+        parameters = list(command.parameters.values())
 
-        if not parameters:
-            raise TypeError(
-                f"Command {cmd.name!r} must have "
-                f"CommandData as its first parameter."
-            )
+        # self.__validate_command(command)
 
-        command_data_parameter = parameters[0]
+        # command_data_parameter = parameters[0]
 
-        if command_data_parameter.annotation is not CommandData:
-            raise TypeError(
-                f"Command {cmd.name!r} must have "
-                f"CommandData as its first parameter."
-            )
+        # if command_data_parameter.annotation is not CommandData:
+        #     raise TypeError(
+        #         f"Command {command.name!r} must have "
+        #         f"CommandData as its first parameter."
+        #     )
 
         user_parameters = parameters[1:]
 
@@ -90,7 +107,7 @@ class CommandHandler:
 
         required = sum(
             p.default is inspect.Parameter.empty
-            for p in user_parameters
+            for p in positional
         )
 
         if len(args) < required:
@@ -111,6 +128,9 @@ class CommandHandler:
             elif last.default is inspect.Parameter.empty:
                 return
 
-        command_data = CommandData(cmd=cmd, message=message, group=group)
+        # elif remaining:
+        #     return
 
-        await cmd(command_data, *positional_args, **kwargs)
+        command_data = CommandData(cmd=command, message=message, group=group)
+
+        await command(command_data, *positional_args, **kwargs)

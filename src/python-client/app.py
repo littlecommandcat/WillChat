@@ -49,8 +49,8 @@ async def on_error(error):
 async def on_disconnect(error):
     print("WebSocket disconnect:", error)
 
-@client.command(name="message")
-async def message_command(cda: commands.CommandData, msg_data: str):
+@client.command(name="echo")
+async def echo_command(cda: commands.CommandData, msg_data: str):
     try:
         print("=" * 40)
         print(f"""Command '{cda.cmd.name}' from {cda.group.name}({cda.group.id}) attaches <{msg_data}>
@@ -62,11 +62,10 @@ Command authorid: {cda.message.authorid}""")
 async def main():
     async with client:
         await client.start(EMAIL, PASSWORD)
-        # Or
-        # await client.start(token="TOKEN")
 
 
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
+    # asyncio.run(client.close())
     print("WebSocket listener stopped")

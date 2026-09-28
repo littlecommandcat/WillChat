@@ -4,7 +4,7 @@ import urllib.parse
 
 import websockets
 
-from config import BASE_URL
+from config import EMAIL, PASSWORD, BASE_URL
 from .request import Requester
 from .objects import Member, Message, Group, _Missing, MISSING
 from .enums import EventType
@@ -27,6 +27,9 @@ class Client:
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.close()
 
+    # def is_running(self) -> bool:
+    #     return self._running
+
     def command(self, name: str | None = None):
         def decorator(func):
             command_name = name or func.__name__
@@ -36,7 +39,7 @@ class Client:
                 name=command_name,
             )
 
-            self._command_handler.add_command(command)
+            self._command_handler._add_command(command)
 
             return command
 
@@ -44,7 +47,7 @@ class Client:
 
     def listen(self, event):
         def decorator(func):
-            self._event_handler._listeners[event].append(func)
+            self._event_handler._add_event(event, func)
             return func
 
         return decorator
@@ -67,6 +70,7 @@ class Client:
         self._running = True
         if email and password:
             data, token = await self._requester.login(email, password)
+            # print(data, token)
 
         if not token:
             self._running = False
@@ -89,12 +93,15 @@ class Client:
                         except json.JSONDecodeError:
                             print("Invalid WebSocket event:", raw_event)
                             continue
-                        
+
+                        # print(event)
                         event_type: str | None = event.get("event")
                         payload = event.get("payload")
 
                         if not event_type:
                             continue
+
+                        # print(payload)
 
                         payload_data = {}
                         if payload.get("member", {}):
@@ -115,6 +122,7 @@ class Client:
                             await self._command_handler._process_command(payload_data["message"], payload_data["group"])
 
                         await self._event_handler._dispatch("event", event_type, payload, payload_data)
+                        # print("event", event_type, payload, **payload_data)
                         await self._event_handler._dispatch(event_type, **payload_data)
 
             except asyncio.CancelledError:
