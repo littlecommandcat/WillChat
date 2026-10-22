@@ -1,16 +1,18 @@
-import inspect
+from __future__ import annotations
 
-from ..objects import Message, Group, _Missing, MISSING
+import inspect
+from ..models import Message, Group
+from ..utils import MISSING
 from .core import Command
 from .data import CommandData
 
 
 class CommandHandler:
-    def __init__(self, command_prefix: str | _Missing):
+    def __init__(self, command_prefix: str = MISSING):
         self._commands: dict[str, Command] = {}
-        self._command_prefix: str | _Missing = command_prefix
+        self._command_prefix: str = command_prefix
 
-    def __validate_command(self, command: Command) -> None:
+    def _validate_command(self, command: Command) -> None:
         parameters = list(command.parameters.values())
 
         if not parameters:
@@ -37,7 +39,7 @@ class CommandHandler:
                 f"one keyword-only parameter."
             )
             
-    def _remove_command(self, command: Command) -> Command:
+    def remove_command(self, command: Command) -> Command:
         if command.name not in self._commands:
             raise ValueError(
                 f"Command {command.name!r} is not registered."
@@ -45,13 +47,13 @@ class CommandHandler:
 
         return self._commands.pop(command.name)
 
-    def _add_command(self, command: Command) -> Command:
+    def add_command(self, command: Command) -> Command:
         if command.name in self._commands:
             raise ValueError(
                 f"Command {command.name!r} is already registered."
             )
 
-        self.__validate_command(command)
+        self._validate_command(command)
 
         self._commands[command.name] = command
         return command

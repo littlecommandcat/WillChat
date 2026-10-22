@@ -5,7 +5,7 @@ import aiohttp
 from typing import Any
 
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "http://192.168.1.156:8087"
 EMAIL = "testtest1@gmail.com"
 PASSWORD = "1231231234"
 USERNAME = "testtest1"

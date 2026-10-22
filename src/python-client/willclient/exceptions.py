@@ -10,11 +10,32 @@ class UnexpectedStatus(WillClientException):
 class FailedConnection(WillClientException):
     pass
 
-class UnknownGroup(WillClientException):
+# Unknown
+class WillClientUnknown(WillClientException):
     pass
 
-class UnknownMessage(WillClientException):
+class UnknownGroup(WillClientUnknown):
     pass
 
-class UnknownMember(WillClientException):
+class UnknownMessage(WillClientUnknown):
+    pass
+
+class UnknownMember(WillClientUnknown):
+    pass
+
+class UnknownLogin(WillClientUnknown):
+    pass
+
+class UnknownSession(WillClientUnknown):
+    pass
+
+# Forbidden
+class WillClientForbidden(WillClientException):
+    pass
+
+class WillClientUnauthorized(WillClientException):
+    pass
+
+# Other
+class TooManyRequests(WillClientException):
     pass

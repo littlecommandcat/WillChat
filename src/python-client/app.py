@@ -2,7 +2,9 @@ import asyncio
 
 from config import EMAIL, PASSWORD
 import willclient
-from willclient import Message, Group, Member, EventType, commands
+from willclient import commands
+from willclient.events import EventType
+from willclient.models import Message, Member, Group
 
 client = willclient.Client(command_prefix="!")
 
