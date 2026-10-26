@@ -1,16 +1,15 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import aiohttp
 
-from exceptions import UnknownLogin, UnknownSession, UnknownMessage
-from cache import _cache_base
+from ..exceptions import UnknownLogin, UnknownSession, UnknownMessage
+from ..cache import _cache_base
 from config import BASE_URL
 from ..utils import raise_code_error, is_not_allowed_code
-if TYPE_CHECKING:
-    from .enums import MessageType, ErrorType
-    from .group import Group
+from .enums import MessageType, ErrorType
+from .group import Group
+
 
 @dataclass
 class Message:
@@ -63,7 +62,7 @@ class Message:
         headers = {"Authorization": f"{_cache_base.token}"}
 
         status_code = 500
-        if picture is not None:
+        if picture is None:
             async with _cache_base.session.post(
                 url=api,
                 headers=headers,

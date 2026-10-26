@@ -20,18 +20,21 @@ async def on_event(event: EventType, *args):
 
 @client.listen("message_send")
 async def on_message_send(message: Message, group: Group):
+    await client.wait_until_ready() # Wait patiently or I'll kill this member object
+    if message.authorid == client.member.id:
+        return
     print("MESSAGE:", message.content, group.name)
 
 @client.listen("message_delete")
 async def on_message_delete(message: Message, group: Group):
     print("DELETE:", message.content, group.name)
 
-@client.listen("group_ceate")
-async def on_group_join(group: Group, member: Member):
+@client.listen("group_create")
+async def on_group_create(group: Group, member: Member):
     print("CREATE GROUP:", group, member)
 
 @client.listen("group_delete")
-async def on_group_leave(group: Group, member: Member):
+async def on_group_delete(group: Group, member: Member):
     print("DELETE GROUP:", group, member)
 
 @client.listen("group_join")
@@ -51,6 +54,10 @@ async def on_error(error):
 async def on_disconnect(error):
     print("WebSocket disconnect:", error)
 
+@client.listen("close")
+async def on_close():
+    print(f"{client.member.name} is closing")
+
 @client.command(name="echo")
 async def echo_command(cda: commands.CommandData, msg_data: str):
     try:
@@ -64,6 +71,8 @@ Command authorid: {cda.message.authorid}""")
 async def main():
     async with client:
         await client.start(EMAIL, PASSWORD)
+        # or
+        # await client.start(token=token)
 
 
 try:

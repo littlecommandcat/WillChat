@@ -29,6 +29,9 @@ class UnknownLogin(WillClientUnknown):
 class UnknownSession(WillClientUnknown):
     pass
 
+class UnknownClient(WillClientUnknown):
+    pass
+
 # Forbidden
 class WillClientForbidden(WillClientException):
     pass

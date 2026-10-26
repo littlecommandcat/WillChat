@@ -1,14 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from dataclasses import dataclass
 
-if TYPE_CHECKING:
-    from .group import Group
+from .group import Group
+
 
 @dataclass
 class Member:
     name: str
-    id: str = id
+    id: str
     groups: list["Group"]
     block: list
     read: dict[str, str]
@@ -20,7 +19,7 @@ class Member:
         groups = [
             Group(
                 name=group.get("name", ""),
-                group_id=group.get("group_id", ""),
+                id=group.get("group_id", ""),
                 owner_id=group.get("owner_id", ""),
                 created_at=group.get("created_at", ""),
             )

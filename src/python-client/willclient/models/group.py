@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 import aiohttp
 
-from exceptions import UnknownLogin, UnknownSession
-from cache import _cache_base
+from ..exceptions import UnknownLogin, UnknownSession
+from ..cache import _cache_base
 from config import BASE_URL
 from ..utils import raise_code_error, is_not_allowed_code
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class Group:
         headers = {"Authorization": f"{_cache_base.token}"}
 
         status_code = 500
-        if picture is not None:
+        if picture is None:
             async with _cache_base.session.post(
                 url=api,
                 headers=headers,

@@ -1,16 +1,20 @@
 from __future__ import annotations
-
+import asyncio
 import inspect
 from ..models import Message, Group
 from ..utils import MISSING
 from .core import Command
 from .data import CommandData
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CommandHandler:
     def __init__(self, command_prefix: str = MISSING):
         self._commands: dict[str, Command] = {}
         self._command_prefix: str = command_prefix
+        self._tasks: set[asyncio.Task] = set()
 
     def _validate_command(self, command: Command) -> None:
         parameters = list(command.parameters.values())
@@ -38,7 +42,15 @@ class CommandHandler:
                 f"Command {command.name!r} can only have "
                 f"one keyword-only parameter."
             )
-            
+
+    async def _run_command(self, command: Command, *args, **kwargs):
+        try:
+            await command(*args, **kwargs)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Error in command: %s", command.name)
+
     def remove_command(self, command: Command) -> Command:
         if command.name not in self._commands:
             raise ValueError(
@@ -58,7 +70,7 @@ class CommandHandler:
         self._commands[command.name] = command
         return command
 
-    async def _process_command(self, message: Message, group: Group) -> None:
+    def _process_command(self, message: Message, group: Group) -> None:
         content = message.content.strip()
 
         if self._command_prefix:
@@ -135,4 +147,14 @@ class CommandHandler:
 
         command_data = CommandData(cmd=command, message=message, group=group)
 
-        await command(command_data, *positional_args, **kwargs)
+        task = asyncio.create_task(
+            self._run_command(
+                command,
+                command_data,
+                *positional_args,
+                **kwargs
+            )
+        )
+
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)

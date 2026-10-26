@@ -94,5 +94,14 @@ class _Requester:
         _cache_base.token = token
         return self._data, token
 
+    async def health(self) -> bool:
+        try:
+            resp, body = await self._request("GET", "/health", _cache_base.session)
+            if resp.status == 200:
+                return True
+            return False
+        except Exception as exc:
+            return False
+
 
 RequestManager = _Requester()
